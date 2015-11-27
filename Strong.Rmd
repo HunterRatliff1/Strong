@@ -1,0 +1,134 @@
+---
+title: "Charlie Strong"
+author: "Hunter Ratliff"
+date: "November 26, 2015"
+output: 
+  html_document:
+    theme: united
+    toc: true
+---    
+
+```{r global_options, include=FALSE}
+require(knitr)
+# opts_knit$set(root.dir = "..")
+
+## Sets output for figures
+knitr::opts_chunk$set(fig.width=12, fig.height=10, fig.path='Figures/',
+                      echo=FALSE, warning=FALSE, message=FALSE, fig.align='center')
+
+# Required packages
+sapply(c("ggplot2", "dplyr", "lubridate", "reshape2", "magrittr", "stringi", "RColorBrewer",
+         "tidyr", "ggthemes", "scales", "RSocrata", "gridExtra", "extrafont", "Hmisc"), require, character.only=TRUE)  
+
+# Citation functions
+source("~/Github/Citations/Citation Function.R")
+```
+
+```{r load, echo=TRUE}
+seasons <- read.csv("utexas_seasons.csv")
+strong  <- read.csv("charlie_strong_stats.csv")
+```
+
+```{r format}
+## UTexas Historical Data
+seasons <- seasons %>% filter(Rk!="Rk")
+
+for(i in c(1, 2, 4:12)) {
+    seasons[,i] <- as.numeric(as.character(seasons[,i]))
+}
+
+seasons$Notes <- NULL
+
+seasons$Coach.es. <- sapply(seasons$Coach.es., function(l) {
+  if(grepl("Charlie", l)) return("Charlie Strong")
+  if(grepl("Mack", l)) return("Mack Brown")
+  else(return(NA))
+})
+
+seasons <- rename(seasons, Coach=Coach.es.)
+seasons$Coach <- as.factor(seasons$Coach)
+
+seasons <- seasons %>%
+  group_by(Coach) %>%
+  mutate(Time.At.School = row_number(Year))
+
+## Data Frame from Charile Strong
+strong <- strong[1:7, ]
+strong$Notes <- NULL
+
+strong <- strong %>%
+  filter(Year > 2009) %>%
+  group_by(School) %>%
+  mutate(Time.At.School = row_number(Year)) 
+
+theme_ut <- theme_economist_white() + theme(
+    legend.position = "bottom",
+    legend.background = element_rect(fill = "transparent"),
+    title           = element_text(color="#BF5700", family = "Georgia"),
+    axis.title      = element_text(face = "bold"),
+    plot.background = element_rect(fill = "#ECE9E2"),
+    axis.text       = element_text(color="#333F48", family = "Tahoma"),
+    panel.background = element_rect(fill = "#D6D2C4")
+    )
+```
+
+---
+
+```{r}
+seasons %>%
+  filter(!is.na(Coach)) %>%
+  ggplot(aes(x=Time.At.School, y=Pct)) +
+  geom_point(aes(color=Coach, shape=Coach, size=SOS))+
+  geom_line(aes(group=Coach), alpha=0.4) +
+  geom_smooth() +
+  labs(x="Time At School", y="W/L Percentage", title="Win/Loss in Respect To Time With UT Program") +
+  scale_size_continuous(name="Strength of Schedule", range=c(2,6)) + 
+  scale_color_wsj() +
+  theme_ut
+citation.htr("Source: http://goo.gl/gdhoMn")
+```
+
+```{r}
+strong %>%
+  ggplot(aes(x=SOS, y=Pct)) + 
+  geom_line(aes(group=School), size=.75) +
+  geom_point(aes(color=Time.At.School, shape=School), size=4) + 
+  scale_color_gradient(low="#FF2222") + # guides(color=F) +
+  labs(x="Strength of Schedule", y="W/L Percentage", title="Win/Loss in Respect To S.O.S.") + 
+  ylim(c(0,1)) + theme_ut
+citation.htr("Source: http://goo.gl/VR3cii")
+  # scale_color_continuous(low="red", high="blue") +
+  
+```
+
+***
+
+<br><br><br>
+
+# Contact
+
+**Hunter Ratliff**
+
+Email: hunterratliff1@gmail.com   
+Twitter: @[HunterRatliff1](https://twitter.com/HunterRatliff1)   
+
+```
+Copyright (C) 2015 Hunter Ratliff
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

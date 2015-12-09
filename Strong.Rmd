@@ -30,6 +30,9 @@ strong  <- read.csv("charlie_strong_stats.csv")
 ```
 
 ```{r format}
+seasons <- read.csv("utexas_seasons.csv")
+strong  <- read.csv("charlie_strong_stats.csv")
+
 ## UTexas Historical Data
 seasons <- seasons %>% filter(Rk!="Rk")
 
@@ -41,7 +44,10 @@ seasons$Notes <- NULL
 
 seasons$Coach.es. <- sapply(seasons$Coach.es., function(l) {
   if(grepl("Charlie", l)) return("Charlie Strong")
-  if(grepl("Mack", l)) return("Mack Brown")
+  if(grepl("Mack B", l)) return("Mack Brown")
+  if(grepl("David McWilliams", l)) return("David McWilliams")
+  if(grepl("Fred Akers", l)) return("Fred Akers")
+  if(grepl("Darrell Royal", l)) return("Darrell Royal")
   else(return(NA))
 })
 
@@ -70,6 +76,7 @@ theme_ut <- theme_economist_white() + theme(
     axis.text       = element_text(color="#333F48", family = "Tahoma"),
     panel.background = element_rect(fill = "#D6D2C4")
     )
+qplot(data=seasons, x=SOS, y=Pct, color=Coach, size=1)
 ```
 
 ---
@@ -78,23 +85,23 @@ theme_ut <- theme_economist_white() + theme(
 seasons %>%
   filter(!is.na(Coach)) %>%
   ggplot(aes(x=Time.At.School, y=Pct)) +
-  geom_point(aes(color=Coach, shape=Coach, size=SOS))+
-  geom_line(aes(group=Coach), alpha=0.4) +
+  geom_point(aes(color=Coach, size=Pct), alpha=0.5)+
+  geom_line(aes(group=Coach, color=Coach), alpha=0.3, size=1) +
   geom_smooth() +
   labs(x="Time At School", y="W/L Percentage", title="Win/Loss in Respect To Time With UT Program") +
   scale_size_continuous(name="Strength of Schedule", range=c(2,6)) + 
-  scale_color_wsj() +
+  scale_color_wsj() + ylim(c(0,1)) +
   theme_ut
 citation.htr("Source: http://goo.gl/gdhoMn")
 ```
 
 ```{r}
 strong %>%
-  ggplot(aes(x=SOS, y=Pct)) + 
+  ggplot(aes(x=SRS, y=Pct)) + 
   geom_line(aes(group=School), size=.75) +
   geom_point(aes(color=Time.At.School, shape=School), size=4) + 
   scale_color_gradient(low="#FF2222") + # guides(color=F) +
-  labs(x="Strength of Schedule", y="W/L Percentage", title="Win/Loss in Respect To S.O.S.") + 
+  labs(x="Simple Ranking System", y="W/L Percentage", title="Win/Loss in Respect To S.R.S.") + 
   ylim(c(0,1)) + theme_ut
 citation.htr("Source: http://goo.gl/VR3cii")
   # scale_color_continuous(low="red", high="blue") +
